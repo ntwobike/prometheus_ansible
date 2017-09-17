@@ -1,0 +1,13 @@
+---
+- name:          Install monitor server
+  user:          root
+  hosts:         server
+  become:        yes
+  become_method: sudo
+  serial:        1
+
+  vars_files:
+    - group_vars/monitoring.yml
+
+  roles:
+    - role:      server

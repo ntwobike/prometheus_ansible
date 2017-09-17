@@ -1,0 +1,39 @@
+---
+- name: Create cadvisor
+  docker_container:
+    name: cadvisor
+    image: google/cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    state: started
+    recreate: yes
+    restart_policy: always
+    exposed_ports:
+      - "{{ internal_port_cadvisor }}"
+    ports:
+      - "{{ exposed_port_cadvisor ~ ':' ~ internal_port_cadvisor }}"
+    networks:
+      - name: monitor_network
+
+- name: Create node-exporter
+  docker_container:
+    name: node-exporter
+    image: prom/node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '-collector.procfs=/host/proc -collector.sysfs=/host/sys -collector.filesystem.ignored-mount-points="^(/rootfs|/host|)/(sys|proc|dev|host|etc)($$|/)" collector.filesystem.ignored-fs-types="^(sys|proc|auto|cgroup|devpts|ns|au|fuse\.lxc|mqueue)(fs|)$$"'
+    state: started
+    recreate: yes
+    restart_policy: always
+    exposed_ports:
+      - "{{ internal_port_node_exporter }}"
+    ports:
+      - "{{ exposed_port_node_exporter ~ ':' ~ internal_port_node_exporter }}"
+    networks:
+      - name: monitor_network

@@ -1,0 +1,25 @@
+#
+# High load
+#
+#ALERT HighLoad
+#  IF node_load1{job="server.whatever"} > 0.5
+#  LABELS {
+#      severity = "warning",
+#    }
+#  ANNOTATIONS {
+#      summary = "Instance {{ $labels.instance }} under high load",
+#      description = "{{ $labels.instance }} of job {{ $labels.job }} is under high load.",
+#  }
+
+ALERT waiting_room_alert_container_name_down
+  IF absent(container_cpu_usage_seconds_total{com_docker_compose_service="your_container_name"})
+    FOR 5s
+    
+    LABELS {
+      severity = "critical",
+      service = "server.whatever"
+    }
+    ANNOTATIONS {
+      SUMMARY= "Instance {{$labels.instance}} down",
+      DESCRIPTION= "Instance= {{$labels.instance}}, Service/Job ={{$labels.job}} is down for more than 5 sec."
+    }

@@ -1,0 +1,96 @@
+---
+- name: Create cadvisor
+  docker_container:
+    name: cadvisor
+    image: google/cadvisor
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    state: started
+    recreate: yes
+    restart_policy: always
+    exposed_ports:
+      - "{{ internal_port_cadvisor }}"
+    ports:
+      - "{{ exposed_port_cadvisor ~ ':' ~ internal_port_cadvisor }}"
+    networks:
+      - name: monitor_network
+
+- name: Create alertmanager
+  docker_container:
+    name: alertmanager
+    image: prom/alertmanager
+    command:
+      - '-config.file=/etc/alertmanager/config.yml'
+      - '-storage.path=/alertmanager'
+      - "{{ '-web.external-url=http://' ~ monitoring_server_alertmanager_ip  ~ ':' ~ exposed_port_alertmanager ~ '/' }}"
+    state: started
+    recreate: yes
+    restart_policy: always
+    ports:
+      - "{{ exposed_port_alertmanager ~ ':' ~ internal_port_alertmanager }}"
+    volumes:
+      - /volumns/alertmanager/:/etc/alertmanager/
+    networks:
+      - name: monitor_network
+
+- name: Create prometheus
+  docker_container:
+    name: prometheus
+    image: prom/prometheus
+    volumes:
+      - /volumns/prometheus:/etc/prometheus
+    command:
+      - '-config.file=/etc/prometheus/prometheus.yml'
+      - '-storage.local.path=/prometheus'
+      - '-query.staleness-delta=1m'
+      - "{{ '-alertmanager.url=http://alertmanager:' ~ internal_port_alertmanager }}"
+      - "{{ '-web.external-url=http://' ~ monitoring_server_prometheus_ip  ~ ':' ~ exposed_port_prometheus ~ '/' }}"
+    state: started
+    recreate: yes
+    restart_policy: always
+    exposed_ports:
+      - "{{ internal_port_prometheus }}"
+    ports:
+      - "{{ exposed_port_prometheus ~ ':' ~ internal_port_prometheus }}"
+    networks:
+      - name: monitor_network
+
+- name: Create node-exporter
+  docker_container:
+    name: node-exporter
+    image: prom/node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '-collector.procfs=/host/proc -collector.sysfs=/host/sys -collector.filesystem.ignored-mount-points="^(/rootfs|/host|)/(sys|proc|dev|host|etc)($$|/)" collector.filesystem.ignored-fs-types="^(sys|proc|auto|cgroup|devpts|ns|au|fuse\.lxc|mqueue)(fs|)$$"'
+    state: started
+    recreate: yes
+    restart_policy: always
+    exposed_ports:
+      - "{{ internal_port_node_exporter }}"
+    ports:
+      - "{{ exposed_port_node_exporter ~ ':' ~ internal_port_node_exporter }}"
+    networks:
+      - name: monitor_network
+
+- name: Create grafana
+  docker_container:
+    name: grafana
+    image: grafana/grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+    state: started
+    recreate: yes
+    restart_policy: always
+    ports:
+      - "{{ exposed_port_grafana ~ ':' ~ internal_port_grafana }}"
+    env:
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_passowrd }}"
+      GF_USERS_ALLOW_SIGN_UP: false
+    networks:
+      - name: monitor_network

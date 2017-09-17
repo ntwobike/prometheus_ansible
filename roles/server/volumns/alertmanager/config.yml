@@ -1,0 +1,17 @@
+route:
+  receiver: 'slack'
+receivers:
+- name: 'slack'
+  slack_configs:
+      - send_resolved: true
+        username: 'Prometheus'
+        api_url: 'slack_api_url'
+        title: '[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] Monitoring Event Notification'
+        text: >-
+            {{ range .Alerts }}
+              **Alert:** {{ .Annotations.summary }}{{ if eq .Labels.severity "critical" }} :exclamation: {{ end }}{{ if eq .Labels.severity "warning" }} :question: {{ end }}
+              **Description:** {{ .Annotations.description }}
+              **Details:**
+              {{ range .Labels.SortedPairs }} • **{{ .Name }}:** `{{ .Value }}`
+              {{ end }}
+            {{ end }}

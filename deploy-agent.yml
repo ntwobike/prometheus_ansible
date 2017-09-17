@@ -1,0 +1,13 @@
+---
+- name:          Install monitor agent
+  user:          root
+  hosts:         agents
+  become:        yes
+  become_method: sudo
+  serial:        1
+
+  vars_files:
+    - group_vars/monitoring.yml
+
+  roles:
+    - role:      agent

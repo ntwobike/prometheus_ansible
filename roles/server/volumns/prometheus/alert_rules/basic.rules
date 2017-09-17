@@ -1,0 +1,54 @@
+#
+# Target is down
+#
+ALERT ServiceDown
+  IF up == 0
+  LABELS {
+      severity = "critical",
+      service = "backend"
+   }
+  ANNOTATIONS {
+      summary = "Service is down",
+      description = "Service Name: {{ $labels.instance }} of job {{ $labels.job }}",
+    }
+
+#
+# High load
+#
+ALERT HighLoad
+  IF node_load1{job="monitoring-server"} > 0.5
+  LABELS {
+      severity = "warning",
+    }
+  ANNOTATIONS {
+      summary = "Instance {{ $labels.instance }} under high load",
+      description = "{{ $labels.instance }} of job {{ $labels.job }} is under high load.",
+  }
+
+#
+# Disk full prediction
+#
+ALERT DiskWillFillIn4Hours
+  IF predict_linear(node_filesystem_free{job='prometheus'}[1h], 4*3600) < 0 FOR 5m
+  LABELS {
+      severity="critical"
+    }
+  ANNOTATIONS {
+      summary = "Less free space is remaining",
+      description = "Disk will run out of free space very soon!!! {{ $labels.instance }}"
+  }
+
+#
+# CPU Alerts
+#
+ALERT HighCPU
+  IF ((sum(node_cpu{mode=~"user|nice|system|irq|softirq|steal|idle|iowait"}) by (instance, job)) - ( sum(node_cpu{mode=~"idle|iowait"}) by (instance,job) )   )   /  (sum(node_cpu{mode=~"user|nice|system|irq|softirq|steal|idle|iowait"}) by (instance, job)) * 100 > 95
+  FOR 10m
+  LABELS { 
+    severity = "warning"
+  }
+  ANNOTATIONS {
+    summary = "High CPU Usage",
+    description = "This machine has really high CPU usage for over 10m",
+  }    
+                                                                

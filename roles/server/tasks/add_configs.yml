@@ -1,0 +1,16 @@
+---
+- name: Add prometheus configs
+  copy:
+    src: volumns/prometheus
+    dest: /volumns/
+    directory_mode: yes
+    owner: root
+    group: root
+
+- name: Add alertmanager configs
+  copy:
+    src: volumns/alertmanager
+    dest: /volumns/
+    directory_mode: yes
+    owner: root
+    group: root

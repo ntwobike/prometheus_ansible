@@ -1,0 +1,11 @@
+---
+- name: check if monitor_network exists
+  command: docker network inspect monitor_network
+  register: monitor_network_exists
+  failed_when: false
+
+- name: Create monitor network
+  docker_network:
+    name: monitor_network
+    appends: yes
+  when: monitor_network_exists|failed

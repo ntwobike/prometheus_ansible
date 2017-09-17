@@ -1,0 +1,21 @@
+---
+# Monitoring server ip
+monitoring_server_prometheus_ip:  server ip
+monitoring_server_alertmanager_ip:  server ip
+
+#Internal ports
+internal_port_cadvisor: 8080
+internal_port_alertmanager: 9093
+internal_port_prometheus: 9090
+internal_port_node_exporter: 9100
+internal_port_grafana: 3000
+
+#Exposed ports
+exposed_port_cadvisor: 6000
+exposed_port_alertmanager: 6001
+exposed_port_prometheus: 6002
+exposed_port_node_exporter: 6003
+exposed_port_grafana: 6004
+
+#grafana
+grafana_admin_passowrd: "admin"
